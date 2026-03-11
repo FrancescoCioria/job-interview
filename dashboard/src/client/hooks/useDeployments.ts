@@ -10,7 +10,7 @@ export function useDeployments() {
       const hasActive = query.state.data?.some(
         (d) => !TERMINAL_STATUSES.has(d.status),
       );
-      return hasActive ? 5000 : false;
+      return hasActive ? 5000 : 30000;
     },
   });
 }

@@ -66,12 +66,14 @@ export class ToolforgeClient {
 
     const accept = opts.accept ?? "application/json";
     let lastError: Error | undefined;
+    let sleptForRetryAfter = false;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      if (attempt > 0) {
+      if (attempt > 0 && !sleptForRetryAfter) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
         await sleep(delay);
       }
+      sleptForRetryAfter = false;
 
       let response: Response;
       try {
@@ -96,6 +98,7 @@ export class ToolforgeClient {
       if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
         const retryAfter = parseRetryAfter(response.headers.get("Retry-After"));
         await sleep(retryAfter);
+        sleptForRetryAfter = true;
         lastError = new ToolforgeApiError(
           `API returned ${response.status}`,
           response.status,

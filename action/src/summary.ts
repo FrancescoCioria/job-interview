@@ -21,7 +21,7 @@ interface SummaryOptions {
 
 export async function writeSummary(opts: SummaryOptions): Promise<void> {
   const emoji = STATUS_EMOJI[opts.deployment.status] ?? "❓";
-  const status = opts.deployment.status.toUpperCase().replace("_", " ");
+  const status = opts.deployment.status.toUpperCase().replace(/_/g, " ");
 
   const summary = core.summary
     .addHeading(`${emoji} Toolforge Deployment: ${status}`)

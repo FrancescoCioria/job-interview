@@ -30004,11 +30004,13 @@ class ToolforgeClient {
             }
         }
         let lastError;
+        let sleptForRetryAfter = false;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            if (attempt > 0) {
+            if (attempt > 0 && !sleptForRetryAfter) {
                 const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
                 await (0, utils_1.sleep)(delay);
             }
+            sleptForRetryAfter = false;
             let response;
             try {
                 response = await fetch(url.toString(), {
@@ -30032,6 +30034,7 @@ class ToolforgeClient {
             if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
                 const retryAfter = parseRetryAfter(response.headers.get("Retry-After"));
                 await (0, utils_1.sleep)(retryAfter);
+                sleptForRetryAfter = true;
                 lastError = new ToolforgeApiError(`API returned ${response.status}`, response.status);
                 continue;
             }
@@ -30272,7 +30275,7 @@ const STATUS_EMOJI = {
 };
 async function writeSummary(opts) {
     const emoji = STATUS_EMOJI[opts.deployment.status] ?? "❓";
-    const status = opts.deployment.status.toUpperCase().replace("_", " ");
+    const status = opts.deployment.status.toUpperCase().replace(/_/g, " ");
     const summary = core.summary
         .addHeading(`${emoji} Toolforge Deployment: ${status}`)
         .addTable([

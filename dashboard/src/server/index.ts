@@ -41,7 +41,7 @@ if (IS_PRODUCTION) {
   const clientDir = resolve(__dirname, "../client");
   const indexHtml = resolve(clientDir, "index.html");
   app.use(express.static(clientDir));
-  app.get("*", (_req, res) => {
+  app.get(/^(?!\/api).*/, (_req, res) => {
     res.sendFile(indexHtml);
   });
 }
