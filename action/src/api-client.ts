@@ -1,4 +1,5 @@
 import { Deployment } from "./types";
+import { sleep } from "./utils";
 
 export class ToolforgeApiError extends Error {
   constructor(
@@ -153,6 +154,3 @@ function parseRetryAfter(header: string | null): number {
   return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : BASE_DELAY_MS;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
