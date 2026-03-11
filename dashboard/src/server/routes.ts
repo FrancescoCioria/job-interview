@@ -86,5 +86,6 @@ function handleError(res: Response, err: unknown): void {
   }
 
   console.error("Unexpected error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  const message = err instanceof Error ? err.message : "Internal server error";
+  res.status(502).json({ error: `Failed to reach Toolforge API: ${message}` });
 }

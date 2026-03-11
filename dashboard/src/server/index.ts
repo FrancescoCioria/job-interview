@@ -51,6 +51,8 @@ app.listen(PORT, () => {
   if (MOCK_MODE) {
     console.log("Mock mode enabled - using sample data");
   } else {
-    console.log(`Connected to Toolforge API for tool: ${TOOL_NAME}`);
+    console.log(`Connected to Toolforge API at: ${API_URL}`);
+    console.log(`Tool name: ${TOOL_NAME}`);
+    console.log(`Token present: ${DEPLOY_TOKEN ? "yes" : "NO"}`);
   }
 });

@@ -33,20 +33,29 @@ export class ToolforgeClient {
   }
 
   async getDeployments(toolName: string): Promise<Deployment[]> {
-    return this.request<Deployment[]>({
+    const response = await this.request<Deployment[] | { data: { deployments: Deployment[] } }>({
       method: "GET",
       path: `/components/v1/tool/${encodeURIComponent(toolName)}/deployment`,
     });
+    if (Array.isArray(response)) return response;
+    if (response && typeof response === "object" && "data" in response) {
+      return response.data.deployments;
+    }
+    return [];
   }
 
   async getDeployment(
     toolName: string,
     deploymentId: string,
   ): Promise<Deployment> {
-    return this.request<Deployment>({
+    const response = await this.request<Deployment | { data: Deployment }>({
       method: "GET",
       path: `/components/v1/tool/${encodeURIComponent(toolName)}/deployment/${encodeURIComponent(deploymentId)}`,
     });
+    if (response && typeof response === "object" && "data" in response && !("deploy_id" in response)) {
+      return response.data;
+    }
+    return response as Deployment;
   }
 
   async getBuildLogs(toolName: string, buildId: string): Promise<string> {
@@ -90,9 +99,11 @@ export class ToolforgeClient {
       }
 
       if (response.status === 401 || response.status === 403) {
+        const body = await response.text().catch(() => "");
         throw new ToolforgeApiError(
           "Authentication failed: invalid or expired deploy token",
           response.status,
+          body,
         );
       }
 
@@ -100,17 +111,21 @@ export class ToolforgeClient {
         const retryAfter = parseRetryAfter(response.headers.get("Retry-After"));
         await sleep(retryAfter);
         sleptForRetryAfter = true;
+        const body = await response.text().catch(() => "");
         lastError = new ToolforgeApiError(
-          `API returned ${response.status}`,
+          `Toolforge API error (${response.status}): ${body || response.statusText}`,
           response.status,
+          body,
         );
         continue;
       }
 
       if (!response.ok) {
+        const body = await response.text().catch(() => "");
         throw new ToolforgeApiError(
-          `API returned ${response.status}`,
+          `Toolforge API error (${response.status}): ${body || response.statusText}`,
           response.status,
+          body,
         );
       }
 
