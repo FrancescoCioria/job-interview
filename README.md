@@ -63,41 +63,82 @@ The two packages are independent — no shared dependencies, no monorepo tooling
 
 A web dashboard that displays Toolforge deployment status and build logs. The Express backend proxies the Toolforge API so the deploy token never reaches the browser.
 
-### Quick Start
-
-**With Docker (recommended):**
+### Quick Start (mock mode — no credentials needed)
 
 ```bash
+# With Docker
 docker compose up
-# Opens at http://localhost:3000 in mock mode (no token needed)
+
+# Without Docker
+cd dashboard && npm install && MOCK_MODE=true npm run dev
 ```
 
-**With real credentials:**
+Opens at http://localhost:3000 with realistic sample data.
 
-```bash
-MOCK_MODE=false \
-TOOLFORGE_TOOL_NAME=my-tool \
-TOOLFORGE_DEPLOY_TOKEN=your-token \
-docker compose up
-```
+### Connecting to a real Toolforge API
 
-**Without Docker:**
+To point the dashboard at a real Toolforge instance you need two things:
+
+1. **A tool name** — the name of your tool on Toolforge (e.g. `my-tool`)
+2. **A deploy token** — generate one on Toolforge with:
+   ```bash
+   toolforge deploy generate-token
+   ```
+
+Then choose one of the options below.
+
+#### Option A: Local (without Docker)
 
 ```bash
 cd dashboard
 npm install
-npm run dev
-# Server: http://localhost:3000, Client: http://localhost:5173
+cp .env.example .env        # create your local config
+```
+
+Edit `.env` and fill in your tool name and token:
+
+```env
+TOOLFORGE_TOOL_NAME=my-tool
+TOOLFORGE_DEPLOY_TOKEN=tf-dp-xxxxxxxx
+```
+
+Then start:
+
+```bash
+# Development (hot-reload, Vite on :5173, API on :3000)
+npm run dev:live
+
+# — or production build —
+npm run build
+npm run start:live
+```
+
+Both `dev:live` and `start:live` load `.env` automatically via Node's `--env-file` flag (requires Node >= 20.6).
+
+#### Option B: Docker
+
+```bash
+MOCK_MODE=false \
+TOOLFORGE_TOOL_NAME=my-tool \
+TOOLFORGE_DEPLOY_TOKEN=tf-dp-xxxxxxxx \
+docker compose up
+```
+
+Or create a `.env` in the project root and Docker Compose will pick it up:
+
+```bash
+cp dashboard/.env.example .env   # then edit .env
+docker compose up
 ```
 
 ### Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `TOOLFORGE_TOOL_NAME` | When `MOCK_MODE=false` | — | Tool name on Toolforge |
-| `TOOLFORGE_DEPLOY_TOKEN` | When `MOCK_MODE=false` | — | Deploy token |
+| `TOOLFORGE_TOOL_NAME` | Yes (unless mock) | — | Tool name on Toolforge |
+| `TOOLFORGE_DEPLOY_TOKEN` | Yes (unless mock) | — | Deploy token |
 | `TOOLFORGE_API_URL` | No | `https://api.svc.toolforge.org` | API base URL |
-| `MOCK_MODE` | No | `false` | Use sample data (no token needed) |
+| `MOCK_MODE` | No | `false` | Set `true` to use sample data without credentials |
 | `PORT` | No | `3000` | Server port |
 
 ### Features

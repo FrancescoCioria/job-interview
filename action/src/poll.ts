@@ -1,4 +1,5 @@
-import { Deployment, TERMINAL_STATUSES } from "./types";
+import { Deployment } from "./types";
+import { TERMINAL_STATUSES } from "./constants";
 import { ToolforgeClient, ToolforgeTimeoutError } from "./api-client";
 import { sleep } from "./utils";
 

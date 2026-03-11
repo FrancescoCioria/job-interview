@@ -36,7 +36,8 @@ interface RequestOptions {
   query?: Record<string, string>;
 }
 
-const MAX_RETRIES = 3;
+/** Total number of attempts (1 initial + retries) */
+const MAX_ATTEMPTS = 4;
 const BASE_DELAY_MS = 1000;
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
@@ -99,7 +100,7 @@ export class ToolforgeClient {
     let lastError: Error | undefined;
     let sleptForRetryAfter = false;
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       if (attempt > 0 && !sleptForRetryAfter) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
         await sleep(delay);
@@ -118,7 +119,7 @@ export class ToolforgeClient {
       } catch (err) {
         lastError =
           err instanceof Error ? err : new Error("Network request failed");
-        if (attempt < MAX_RETRIES) continue;
+        if (attempt < MAX_ATTEMPTS - 1) continue;
         throw lastError;
       }
 
@@ -126,7 +127,7 @@ export class ToolforgeClient {
         throw new ToolforgeAuthError(response.status);
       }
 
-      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
+      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < MAX_ATTEMPTS - 1) {
         const retryAfter = parseRetryAfter(response.headers.get("Retry-After"));
         await sleep(retryAfter);
         sleptForRetryAfter = true;

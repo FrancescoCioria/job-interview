@@ -21,4 +21,3 @@ export interface Deployment {
     force_build: boolean;
     force_run: boolean;
 }
-export declare const TERMINAL_STATUSES: ReadonlySet<DeploymentStatus>;

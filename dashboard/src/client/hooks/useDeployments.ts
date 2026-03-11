@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDeployments } from "../lib/api";
-import { TERMINAL_STATUSES } from "../../shared/types";
+import { TERMINAL_STATUSES } from "../../shared/constants";
 
 export function useDeployments() {
   return useQuery({

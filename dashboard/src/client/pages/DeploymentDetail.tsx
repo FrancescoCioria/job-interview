@@ -6,7 +6,7 @@ import { StatusBadge } from "../components/StatusBadge";
 import { TimeAgo } from "../components/TimeAgo";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Skeleton } from "../components/Skeleton";
-import { TERMINAL_STATUSES } from "../../shared/types";
+import { TERMINAL_STATUSES } from "../../shared/constants";
 import type { DeploymentBuild, DeploymentRun } from "../../shared/types";
 
 export function DeploymentDetail() {
