@@ -1,0 +1,25 @@
+name: Deploy to Toolforge
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Toolforge
+        uses: ./action
+        id: deploy
+        with:
+          tool_name: ${{ vars.TOOLFORGE_TOOL_NAME }}
+          deploy_token: ${{ secrets.TOOLFORGE_DEPLOY_TOKEN }}
+          dashboard_url: ${{ vars.DASHBOARD_URL }}
+
+      - name: Print result
+        run: |
+          echo "Deployment ID: ${{ steps.deploy.outputs.deployment_id }}"
+          echo "Status: ${{ steps.deploy.outputs.deployment_status }}"
+          echo "URL: ${{ steps.deploy.outputs.deployment_url }}"

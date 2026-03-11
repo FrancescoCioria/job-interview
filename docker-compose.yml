@@ -1,0 +1,11 @@
+services:
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - TOOLFORGE_TOOL_NAME=${TOOLFORGE_TOOL_NAME:-my-tool}
+      - TOOLFORGE_DEPLOY_TOKEN=${TOOLFORGE_DEPLOY_TOKEN:-}
+      - TOOLFORGE_API_URL=${TOOLFORGE_API_URL:-https://api.svc.toolforge.org}
+      - MOCK_MODE=${MOCK_MODE:-true}
+      - PORT=3000

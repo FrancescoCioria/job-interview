@@ -1,0 +1,47 @@
+name: "Toolforge Deploy"
+description: "Trigger a Toolforge deployment via the Components API and monitor progress"
+author: "Francesco"
+
+inputs:
+  tool_name:
+    description: "Name of the Toolforge tool to deploy"
+    required: true
+  deploy_token:
+    description: "Toolforge deploy token (pass as secret)"
+    required: true
+  api_base_url:
+    description: "Toolforge API base URL"
+    required: false
+    default: "https://api.svc.toolforge.org"
+  force_build:
+    description: "Force rebuild even if no changes detected"
+    required: false
+    default: "false"
+  force_run:
+    description: "Force restart even if no changes detected"
+    required: false
+    default: "false"
+  timeout_seconds:
+    description: "Maximum time to wait for deployment completion"
+    required: false
+    default: "300"
+  dashboard_url:
+    description: "Base URL of the Deployment Inspector dashboard"
+    required: false
+    default: ""
+
+outputs:
+  deployment_id:
+    description: "ID of the triggered deployment"
+  deployment_status:
+    description: "Final status of the deployment"
+  deployment_url:
+    description: "API URL to check deployment status"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
+
+branding:
+  icon: "upload-cloud"
+  color: "blue"
