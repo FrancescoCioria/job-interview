@@ -2,6 +2,102 @@
 
 A GitHub Action that triggers [Toolforge](https://wikitech.wikimedia.org/wiki/Help:Toolforge) deployments via the Components API, paired with a web dashboard to inspect deployment status and logs.
 
+## Getting Started
+
+### Try it now (mock mode — no credentials needed)
+
+```bash
+cd dashboard && npm install && MOCK_MODE=true npm run dev
+```
+
+Opens at http://localhost:5173 with realistic sample data. Or with Docker: `docker compose up`.
+
+### Connect to a real API
+
+The dashboard backend acts as a proxy: you tell it **which API to call**, and it forwards every request there with the token attached. The browser never talks to the API directly.
+
+```
+Browser → React → /api/* → Express backend → TOOLFORGE_API_URL (your API)
+```
+
+You configure the backend with three environment variables:
+
+| Variable | What it does | Example |
+|----------|-------------|---------|
+| `TOOLFORGE_API_URL` | Base URL of the API to connect to | `http://localhost:8080` or `https://api.svc.toolforge.org` |
+| `TOOLFORGE_TOOL_NAME` | Tool name, used in API paths | `my-tool` |
+| `TOOLFORGE_DEPLOY_TOKEN` | Token sent in the `Api-Key` header on every request | `tf-dp-xxxxxxxx` |
+
+The API must expose these endpoints ([Toolforge Components API](https://wikitech.wikimedia.org/wiki/Help:Toolforge/Components_API)):
+
+```
+GET  /components/v1/tool/{name}/deployment          → list deployments
+GET  /components/v1/tool/{name}/deployment/{id}      → single deployment
+GET  /builds/v1/tool/{name}/builds/{buildId}/logs    → build logs (text/plain)
+```
+
+#### Quick one-liner
+
+```bash
+cd dashboard && npm install
+TOOLFORGE_API_URL=http://localhost:8080 \
+TOOLFORGE_TOOL_NAME=my-tool \
+TOOLFORGE_DEPLOY_TOKEN=my-token \
+npm run dev
+```
+
+That's it — the dashboard opens at http://localhost:5173.
+
+#### Using a `.env` file (recommended for repeated use)
+
+```bash
+cd dashboard
+npm install
+cp .env.example .env
+```
+
+Edit `.env` — point `TOOLFORGE_API_URL` at your API:
+
+```env
+TOOLFORGE_API_URL=http://localhost:8080
+TOOLFORGE_TOOL_NAME=my-tool
+TOOLFORGE_DEPLOY_TOKEN=my-token
+```
+
+Then:
+
+```bash
+npm run dev:live          # dev mode with hot-reload (Vite on :5173, API on :3000)
+
+# — or —
+npm run build && npm run start:live   # production build on :3000
+```
+
+`dev:live` and `start:live` load `.env` automatically (Node `--env-file`, requires Node >= 20.6).
+
+> `TOOLFORGE_API_URL` defaults to `https://api.svc.toolforge.org` if omitted.
+
+#### With Docker
+
+Create a `.env` in the project root (Docker Compose loads it automatically):
+
+```bash
+cp dashboard/.env.example .env   # edit, then:
+docker compose up
+```
+
+### All environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `TOOLFORGE_API_URL` | No | `https://api.svc.toolforge.org` | Base URL of the API to connect to |
+| `TOOLFORGE_TOOL_NAME` | Yes (unless mock) | — | Tool name on Toolforge |
+| `TOOLFORGE_DEPLOY_TOKEN` | Yes (unless mock) | — | Token sent in `Api-Key` header |
+| `MOCK_MODE` | No | `false` | Set `true` to use sample data without credentials |
+| `PORT` | No | `3000` | Dashboard server port |
+
+---
+
 ## Repository Structure
 
 ```
@@ -13,7 +109,7 @@ A GitHub Action that triggers [Toolforge](https://wikitech.wikimedia.org/wiki/He
 
 The two packages are independent — no shared dependencies, no monorepo tooling. Each has its own `package.json`, `tsconfig.json`, and can be deployed separately.
 
-## Part A: GitHub Action
+## GitHub Action
 
 ### Usage
 
@@ -59,87 +155,7 @@ The two packages are independent — no shared dependencies, no monorepo tooling
 - Token is sent only in the `Api-Key` header, never in URLs or query parameters
 - Auth failures (401/403) fail immediately without retry
 
-## Part B: Deployment Inspector Dashboard
-
-A web dashboard that displays Toolforge deployment status and build logs. The Express backend proxies the Toolforge API so the deploy token never reaches the browser.
-
-### Quick Start (mock mode — no credentials needed)
-
-```bash
-# With Docker
-docker compose up
-
-# Without Docker
-cd dashboard && npm install && MOCK_MODE=true npm run dev
-```
-
-Opens at http://localhost:3000 with realistic sample data.
-
-### Connecting to a real Toolforge API
-
-To point the dashboard at a real Toolforge instance you need two things:
-
-1. **A tool name** — the name of your tool on Toolforge (e.g. `my-tool`)
-2. **A deploy token** — generate one on Toolforge with:
-   ```bash
-   toolforge deploy generate-token
-   ```
-
-Then choose one of the options below.
-
-#### Option A: Local (without Docker)
-
-```bash
-cd dashboard
-npm install
-cp .env.example .env        # create your local config
-```
-
-Edit `.env` and fill in your tool name and token:
-
-```env
-TOOLFORGE_TOOL_NAME=my-tool
-TOOLFORGE_DEPLOY_TOKEN=tf-dp-xxxxxxxx
-```
-
-Then start:
-
-```bash
-# Development (hot-reload, Vite on :5173, API on :3000)
-npm run dev:live
-
-# — or production build —
-npm run build
-npm run start:live
-```
-
-Both `dev:live` and `start:live` load `.env` automatically via Node's `--env-file` flag (requires Node >= 20.6).
-
-#### Option B: Docker
-
-```bash
-MOCK_MODE=false \
-TOOLFORGE_TOOL_NAME=my-tool \
-TOOLFORGE_DEPLOY_TOKEN=tf-dp-xxxxxxxx \
-docker compose up
-```
-
-Or create a `.env` in the project root and Docker Compose will pick it up:
-
-```bash
-cp dashboard/.env.example .env   # then edit .env
-docker compose up
-```
-
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `TOOLFORGE_TOOL_NAME` | Yes (unless mock) | — | Tool name on Toolforge |
-| `TOOLFORGE_DEPLOY_TOKEN` | Yes (unless mock) | — | Deploy token |
-| `TOOLFORGE_API_URL` | No | `https://api.svc.toolforge.org` | API base URL |
-| `MOCK_MODE` | No | `false` | Set `true` to use sample data without credentials |
-| `PORT` | No | `3000` | Server port |
+## Dashboard Details
 
 ### Features
 
