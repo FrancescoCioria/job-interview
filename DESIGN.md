@@ -9,6 +9,54 @@ This project consists of two independent deliverables:
 
 Both are TypeScript-strict, independently deployable, and designed to work with or without real Toolforge credentials.
 
+## API Endpoints
+
+The dashboard backend proxies these [Toolforge Components API](https://wikitech.wikimedia.org/wiki/Help:Toolforge/Components_API) endpoints:
+
+```
+GET  /components/v1/tool/{name}/deployment          → list deployments
+GET  /components/v1/tool/{name}/deployment/{id}      → single deployment
+GET  /builds/v1/tool/{name}/builds/{buildId}/logs    → build logs (text/plain)
+```
+
+## GitHub Action Reference
+
+### Inputs
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `tool_name` | Yes | — | Toolforge tool name |
+| `deploy_token` | Yes | — | Deploy token (pass as secret) |
+| `api_base_url` | No | `https://api.svc.toolforge.org` | API base URL |
+| `force_build` | No | `false` | Force rebuild |
+| `force_run` | No | `false` | Force restart |
+| `timeout_seconds` | No | `300` | Max wait time |
+| `dashboard_url` | No | — | Dashboard URL for Job Summary links |
+
+### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `deployment_id` | ID of the triggered deployment |
+| `deployment_status` | Final status (`successful`, `failed`, `timed_out`, etc.) |
+| `deployment_url` | API URL to check deployment status |
+
+### Behavior
+
+1. Triggers a deployment via `POST /components/v1/tool/{name}/deployment`
+2. Polls status every 5-15s with exponential backoff
+3. Writes a GitHub Job Summary with deployment details, component status, and dashboard links
+4. Sets outputs for downstream workflow steps
+5. Fails the step if the deployment fails, times out, or encounters an API error
+
+## Dashboard Features
+
+- **Deployment list** with status badges, timestamps, and auto-polling
+- **Deployment detail** with per-component build/run status
+- **Build logs viewer** with terminal-style output
+- **Mock mode** for demo/development without Toolforge credentials
+- **Smart polling**: auto-refreshes every 5s while deployments are active, stops when complete
+
 ## Key Design Decisions
 
 ### Two Independent Packages
